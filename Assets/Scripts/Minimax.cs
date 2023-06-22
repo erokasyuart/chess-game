@@ -158,6 +158,8 @@ public class Minimax : MonoBehaviour
         {
             int maxScore = int.MinValue; //sets this value as the lowest for default
             List<MoveData> allMoves = GetMoves(gameManager.playerTurn); //all possible moves for the player
+            allMoves = Shuffle(allMoves);
+
             foreach (MoveData move in allMoves)
             {
                 moveStack.Push(move);//go backwards through nodes
@@ -184,6 +186,8 @@ public class Minimax : MonoBehaviour
             PlayerTeam opponent = gameManager.playerTurn == PlayerTeam.WHITE ? PlayerTeam.BLACK : PlayerTeam.WHITE;
             int minScore = int.MaxValue;
             List<MoveData> allMoves = GetMoves(opponent);
+            allMoves = Shuffle(allMoves);
+
             foreach (MoveData move in allMoves)
             {
                 moveStack.Push(move);
@@ -200,4 +204,19 @@ public class Minimax : MonoBehaviour
             return minScore;
         }
     }
+
+    //Randomises the list of anything (T type is placeholder)
+    public List<T> Shuffle<T>(List<T> list)  
+    {  
+        int n = list.Count;  
+        while (n > 1) {  
+            n--;  
+            int k = Random.Range(0,n);  
+            T value = list[k];  
+            list[k] = list[n];  
+            list[n] = value;  
+        }  
+        return list;
+    }
+
 }
