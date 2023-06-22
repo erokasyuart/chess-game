@@ -138,14 +138,15 @@ public class Minimax : MonoBehaviour
         bestMove = CreateMove(board.GetTileFromBoard(new Vector2(0, 0)), board.GetTileFromBoard(new Vector2(0, 0))); //chooses the best possible move and default start at 0,0
 
         maxDepth = 3; //max branch reach - higher will make the game run slower
-        CalculateMinMax(maxDepth, true);
+        CalculateMinMax(maxDepth, int.MinValue, int.MaxValue, true);
 
         return bestMove;
     }
 
     //recursive function
     //uses maxDepth for a limit and bool for minimising and maximising move score
-    int CalculateMinMax(int depth, bool max)
+    //alpha and beta is used to not repeat branches which increase efficiency
+    int CalculateMinMax(int depth, int alpha, int beta, bool max)
     {
         GetBoardState();
 
@@ -156,7 +157,6 @@ public class Minimax : MonoBehaviour
 
         if (max) //if maximising (true)
         {
-            int maxScore = int.MinValue; //sets this value as the lowest for default
             List<MoveData> allMoves = GetMoves(gameManager.playerTurn); //all possible moves for the player
             allMoves = Shuffle(allMoves);
 
@@ -165,26 +165,31 @@ public class Minimax : MonoBehaviour
                 moveStack.Push(move);//go backwards through nodes
 
                 DoFakeMove(move.firstPosition, move.secondPosition); //does a fake move
-                int score = CalculateMinMax(depth - 1, false); //call method again for the next level down the tree and swap the bool
+                int score = CalculateMinMax(depth - 1, int.MinValue, int.MaxValue, false); //call method again for the next level down the tree and swap the bool
                 UndoFakeMove(); 
 
-                if(score > maxScore) //compares and overwrites
+                if(score > alpha) //compares and overwrites
                 {
-                    maxScore = score;
+                    alpha = score;
+                    move.score = score;
+
+                    if(score > bestMove.score && depth == maxDepth)
+                    {
+                        move.score = score;
+                        bestMove = move; //chooses the best move
+                    }
                 }
 
-                if(score > bestMove.score && depth == maxDepth)
+                if (score >= beta)
                 {
-                    move.score = score;
-                    bestMove = move; //chooses the best move
+                    break;
                 }
             }
-            return maxScore;
+            return alpha;
         }
         else
         {
             PlayerTeam opponent = gameManager.playerTurn == PlayerTeam.WHITE ? PlayerTeam.BLACK : PlayerTeam.WHITE;
-            int minScore = int.MaxValue;
             List<MoveData> allMoves = GetMoves(opponent);
             allMoves = Shuffle(allMoves);
 
@@ -193,15 +198,20 @@ public class Minimax : MonoBehaviour
                 moveStack.Push(move);
 
                 DoFakeMove(move.firstPosition, move.secondPosition);
-                int score = CalculateMinMax(depth - 1, true);
+                int score = CalculateMinMax(depth - 1, int.MinValue, int.MaxValue, true);
                 UndoFakeMove();
 
-                if(score < minScore)
+                if(score < beta)
                 {
-                    minScore = score;
-                }             
+                    beta = score;
+                }
+
+                if (score <= alpha)
+                {
+                    break;
+                }
             }
-            return minScore;
+            return beta;
         }
     }
 
