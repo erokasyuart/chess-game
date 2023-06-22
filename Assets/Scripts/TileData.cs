@@ -22,8 +22,10 @@ public class TileData
         position.x = x;
         position.y = y;
 
-        if (y == 0 || y == 1 || y == 6 || y == 7)        
-            currentPiece = GameObject.Find("[" + x.ToString() + "," + y.ToString() + "]").GetComponent<ChessPiece>();        
+        if (y == 0 || y == 1 || y == 6 || y == 7)
+        {
+            currentPiece = GameObject.Find("[" + x.ToString() + "," + y.ToString() + "]").GetComponent<ChessPiece>();
+        }        
     }
 
     public void SwapFakePieces(ChessPiece newPiece)

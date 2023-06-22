@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Minmax : MonoBehaviour
+public class Minimax : MonoBehaviour
 {
     BoardManager board;
     GameManager gameManager;
@@ -73,10 +73,11 @@ public class Minmax : MonoBehaviour
         return turnMove;
     }
 
+    //The algorithm calculates "fake moves"
     void DoFakeMove(TileData currentTile, TileData targetTile)
     {
         targetTile.SwapFakePieces(currentTile.CurrentPiece);
-        currentTile.currentPiece = null;
+        currentTile.CurrentPiece = null;
     }
 
     //Undoes the fake moves by moving back up the tree
@@ -88,11 +89,11 @@ public class Minmax : MonoBehaviour
         ChessPiece pieceKilled = tempMove.pieceKilled;
         ChessPiece pieceMoved = tempMove.pieceMoved;
 
-        movedFrom.currentPiece = movedTo.currentPiece;
-        movedTo.currentPiece = (pieceKilled != null) ? pieceKilled : null;
+        movedFrom.CurrentPiece = movedTo.CurrentPiece;
+        movedTo.CurrentPiece = (pieceKilled != null) ? pieceKilled : null;
     }
 
-    //Evaluation function
+    //Evaluation function that subtracts the computer's score from the player's
     int Evaluate()
     {
         int pieceDifference = myScore - opponentScore;
@@ -126,6 +127,77 @@ public class Minmax : MonoBehaviour
                     }
                 }
             }     
+        }
+    }
+
+    //called from gameManager
+    public MoveData GetMove()
+    {
+        board = BoardManager.Instance;
+        gameManager = GameManager.Instance;
+        bestMove = CreateMove(board.GetTileFromBoard(new Vector2(0, 0)), board.GetTileFromBoard(new Vector2(0, 0))); //chooses the best possible move and default start at 0,0
+
+        maxDepth = 3; //max branch reach - higher will make the game run slower
+        CalculateMinMax(maxDepth, true);
+
+        return bestMove;
+    }
+
+    //recursive function
+    //uses maxDepth for a limit and bool for minimising and maximising move score
+    int CalculateMinMax(int depth, bool max)
+    {
+        GetBoardState();
+
+        if (depth == 0) //if at an end node
+        {
+            return Evaluate(); //move score
+        }
+
+        if (max) //if maximising (true)
+        {
+            int maxScore = int.MinValue; //sets this value as the lowest for default
+            List<MoveData> allMoves = GetMoves(gameManager.playerTurn); //all possible moves for the player
+            foreach (MoveData move in allMoves)
+            {
+                moveStack.Push(move);//go backwards through nodes
+
+                DoFakeMove(move.firstPosition, move.secondPosition); //does a fake move
+                int score = CalculateMinMax(depth - 1, false); //call method again for the next level down the tree and swap the bool
+                UndoFakeMove(); 
+
+                if(score > maxScore) //compares and overwrites
+                {
+                    maxScore = score;
+                }
+
+                if(score > bestMove.score && depth == maxDepth)
+                {
+                    move.score = score;
+                    bestMove = move; //chooses the best move
+                }
+            }
+            return maxScore;
+        }
+        else
+        {
+            PlayerTeam opponent = gameManager.playerTurn == PlayerTeam.WHITE ? PlayerTeam.BLACK : PlayerTeam.WHITE;
+            int minScore = int.MaxValue;
+            List<MoveData> allMoves = GetMoves(opponent);
+            foreach (MoveData move in allMoves)
+            {
+                moveStack.Push(move);
+
+                DoFakeMove(move.firstPosition, move.secondPosition);
+                int score = CalculateMinMax(depth - 1, true);
+                UndoFakeMove();
+
+                if(score < minScore)
+                {
+                    minScore = score;
+                }             
+            }
+            return minScore;
         }
     }
 }

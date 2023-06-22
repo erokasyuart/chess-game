@@ -24,18 +24,25 @@ public class GameManager : MonoBehaviour
     }
     private bool isCoroutineExecuting = false;
 
+    Minimax minimax;
+
     private void Awake()
     {
-        if (instance == null)        
+        if (instance == null)
+        {
             instance = this;        
-        else if (instance != this)        
+        }
+        else if (instance != this)
+        {
             Destroy(this);    
+        }
     }    
 
     void Start()
     {
-        board = BoardManager.Instance;        
+        board = BoardManager.Instance;
         board.SetupBoard();
+        minimax = Minimax.Instance;
     }
 
     private void Update()
@@ -46,27 +53,19 @@ public class GameManager : MonoBehaviour
     IEnumerator DoAIMove()
     {       
         if(isCoroutineExecuting)
+        {
             yield break;
+        }
 
         isCoroutineExecuting = true;
 
-        if (kingDead)                    
-            Debug.Log(playerTurn + " wins!");        
+        if (kingDead)
+        {
+            Debug.Log(playerTurn + " wins!");
+        }
         else if (!kingDead)
         {                     
-            MoveFunction movement = new MoveFunction(board);
-            MoveData move = null;
-            for (int y = 0; y < 8; y++)                
-                for (int x = 0; x < 8; x++)            
-                {
-                    TileData tile = board.GetTileFromBoard(new Vector2(x, y));
-                    if(tile.CurrentPiece != null && tile.CurrentPiece.Team == playerTurn)
-                    {
-                        List<MoveData> pieceMoves = movement.GetMoves(tile.CurrentPiece, tile.Position);
-                        if(pieceMoves.Count > 0)                        
-                            move = pieceMoves[0];                        
-                    }
-                }
+           MoveData move = minimax.GetMove();
         
             RemoveObject("Highlight");
             ShowMove(move);
@@ -103,11 +102,17 @@ public class GameManager : MonoBehaviour
 
     void CheckDeath(TileData _secondTile)
     {
-        if (_secondTile.CurrentPiece != null)        
-            if (_secondTile.CurrentPiece.Type == ChessPiece.PieceType.KING)           
-                kingDead = true;                           
+        if (_secondTile.CurrentPiece != null)
+        {
+            if (_secondTile.CurrentPiece.Type == ChessPiece.PieceType.KING)
+            {
+                kingDead = true;
+            }
             else
-                Destroy(_secondTile.CurrentPiece.gameObject);        
+            {
+                Destroy(_secondTile.CurrentPiece.gameObject);
+            }
+        }
     }
 
     void ShowMove(MoveData move)
@@ -125,6 +130,8 @@ public class GameManager : MonoBehaviour
     {
         GameObject[] objects = GameObject.FindGameObjectsWithTag(text);
         foreach (GameObject GO in objects)
-            Destroy(GO);        
+        {
+            Destroy(GO);
+        }
     }
 }
