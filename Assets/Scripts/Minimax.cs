@@ -10,6 +10,7 @@ public class Minimax : MonoBehaviour
     int myScore = 0; //evaluation function
     int opponentScore = 0;
     int maxDepth; //tells recursive function when to stop
+    int count;
 
     List<TileData> myPieces = new List<TileData>();
     List<TileData> opponentPieces = new List<TileData>();
@@ -133,13 +134,14 @@ public class Minimax : MonoBehaviour
     //called from gameManager
     public MoveData GetMove()
     {
+        count = 0;
         board = BoardManager.Instance;
         gameManager = GameManager.Instance;
         bestMove = CreateMove(board.GetTileFromBoard(new Vector2(0, 0)), board.GetTileFromBoard(new Vector2(0, 0))); //chooses the best possible move and default start at 0,0
 
         maxDepth = 3; //max branch reach - higher will make the game run slower
         CalculateMinMax(maxDepth, int.MinValue, int.MaxValue, true);
-
+        Debug.Log(count);
         return bestMove;
     }
 
@@ -148,6 +150,7 @@ public class Minimax : MonoBehaviour
     //alpha and beta is used to not repeat branches which increase efficiency
     int CalculateMinMax(int depth, int alpha, int beta, bool max)
     {
+        count++;
         GetBoardState();
 
         if (depth == 0) //if at an end node
